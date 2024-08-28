@@ -16,14 +16,11 @@ COPY . .
 # Build the React application
 RUN npm run build
 
-# Stage 2: Serve the React app using Nginx
-FROM nginx:alpine
+# Serve the application using npm's serve command
+RUN npm install -g serve
 
-# Copy the build files from the previous stage
-COPY --from=build /app/build /usr/share/nginx/html
+# Expose port 3000 or whatever port serve uses
+EXPOSE 3000
 
-# Expose port 80 to serve the application
-EXPOSE 80
-
-# Start Nginx server
-CMD ["nginx", "-g", "daemon off;"]
+# Start the React app using serve
+CMD ["serve", "-s", "build"]
