@@ -1,0 +1,14 @@
+{
+  "files": {
+    "main.css": "/static/css/main.109e038d.css",
+    "main.js": "/static/js/main.57356197.js",
+    "static/media/bizmunch-icon-grey.png": "/static/media/bizmunch-icon-grey.cdf5be36ad989c4e75bc.png",
+    "index.html": "/index.html",
+    "main.109e038d.css.map": "/static/css/main.109e038d.css.map",
+    "main.57356197.js.map": "/static/js/main.57356197.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.109e038d.css",
+    "static/js/main.57356197.js"
+  ]
+}
