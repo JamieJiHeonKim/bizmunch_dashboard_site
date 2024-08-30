@@ -3,10 +3,12 @@ import { login } from "../../services/api";
 import toast from "react-hot-toast";
 import { Toaster } from "react-hot-toast";
 import siteLogo from "../../assets/bizmunch-icon-grey.png";
+import { useNavigate } from 'react-router-dom';
 import { useDispatch } from "react-redux";
 import { set_user } from "../../redux/states/user";
 
 function AdminSignin() {
+  const navigate = useNavigate();
   const dispatch = useDispatch();
   const [loading, setloading] = useState(false);
   const [email, setemail] = useState("");
@@ -47,7 +49,14 @@ function AdminSignin() {
       <Toaster />
       <div className="bg-white rounded-md shadow-md max-w-[778px] max-h-[750px] h-[70%] flex w-[80%] items-center justify-center">
         <div className="flex flex-col gap-6 items-center">
-          <img src={siteLogo} alt="Website Logo" style={{ marginTop: '-70px', marginBottom: '-20px', maxWidth: '240px', alignSelf: 'center' }} />
+          <div className="cursor-pointer hover:cursor-pointer">
+            <img 
+              src={siteLogo} 
+              alt="Website Logo" 
+              style={{ marginTop: '-70px', marginBottom: '-20px', maxWidth: '180px', alignSelf: 'center' }} 
+              onClick={() => navigate('/home')} 
+            />
+          </div>
           <h1 className="text-2xl font-semibold">Login to Admin Dashboard</h1>
           <div className="max-w-[396px] w-full flex  flex-col gap-3">
             <h1>Email: </h1>
@@ -85,9 +94,9 @@ function AdminSignin() {
           </button>
           <div className="flex flex-col gap-2 items-center">
             <p>
-              <span className="text-[#98A2B3]">Are you an Employee</span>{" "}
-              <a href="/employee/signin" className="text-[#F58549]">
-                Sign in as Employee
+              {/* <span className="text-[#98A2B3]">Are you a Company Staff?</span>{" "} */}
+              <a href="/manager/signin" className="text-[#F58549]">
+                Sign in Manager
               </a>
             </p>
           </div>
