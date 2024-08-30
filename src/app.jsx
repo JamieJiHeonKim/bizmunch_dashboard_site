@@ -26,11 +26,12 @@ import { store, persistor } from "./redux/store";
 
 import PasswordReset from "./pages/App/Password";
 import PasswordChange from "./pages/App/PasswordChange";
-import Signup from "./pages/Employee/Signup";
+// import Signup from "./pages/Employee/Signup";
 import Signin from "./pages/Employee/Signin";
 import CompanyDetails from "./pages/Admin/company_details";
 import Restaurants from "./pages/Admin/restaurants";
 import RestaurantDetails from "./pages/Admin/restaurant_details";
+import Homepage from "./pages/Home/Homepage";
 
 const App = () => {
   const isAdmin = () => {
@@ -55,16 +56,17 @@ const App = () => {
           <Routes>
             <Route path="/passwordreset" element={<PasswordReset />} />
             <Route path="/passwordchange" element={<PasswordChange />} />
-            <Route path="/" element={<Navigate to={"/admin/signin"} />} />
+            <Route path="/" element={<Navigate to="/home" />} />
+            <Route path="/home" element={<Homepage />} />
             <Route
               path="/admin/signin"
               element={
                 isAdmin() ? (
-                  <Navigate to={"/admin/companies"} />
+                  <Navigate to="/admin/companies" />
                 ) : isEmployee() ? (
-                  <Navigate to={"/employee/dashboard"} />
+                  <Navigate to="/employee/dashboard" />
                 ) : isManager() ? (
-                  <Navigate to={"/manager/dashboard"} />
+                  <Navigate to="/manager/dashboard" />
                 ) : (
                   <AdminSignin />
                 )
@@ -171,7 +173,7 @@ const App = () => {
                 )
               }
             />
-            <Route path="/employee/signup" element={<Signup />} />
+            {/* <Route path="/employee/signup" element={<Signup />} /> */}
             <Route
               path="/employee/signin"
               element={
