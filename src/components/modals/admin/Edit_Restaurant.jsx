@@ -19,7 +19,7 @@ function EDIT_RESTAURANT(props) {
   const [loading, setLoading] = useState(false);
   const fileInputLogoRef = useRef();
   const fileInputBarcodeRef = useRef();
-  const categories = ['Diner', 'Sandwich', 'Pizza', 'Asian', 'Vegie', 'Café', 'Spicy', 'Drink'];
+  const categories = ['Asian', 'Fastfood', 'Café', 'Grill', 'Vegetarian', 'Spicy', 'American', 'Pizza', 'Dessert'];
 
   useEffect(() => {
     if (props.restaurant) {
