@@ -69,7 +69,7 @@ function CREATE_RESTAURANT({ refresh }) {
     setBarcode(event.target.files[0]);
   }
 
-  const categories = ['Diner', 'Sandwich', 'Pizza', 'Asian', 'Vegie', 'Café', 'Spicy', 'Drink'];
+  const categories = ['Asian', 'Fastfood', 'Café', 'Grill', 'Vegetarian', 'Spicy', 'American', 'Pizza', 'Dessert'];
 
   return (
     <dialog id="Create_Restaurant" className="modal">
