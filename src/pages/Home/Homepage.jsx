@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import "react-responsive-carousel/lib/styles/carousel.min.css"; // Import carousel styles
 import siteLogo from '../../assets/bizmunch-icon-grey.png';
@@ -6,7 +6,11 @@ import backgroundImage from '../../assets/backgroundImage.jpg';
 import './Homepage.css';
 
 const Homepage = () => {
+  const [showModal, setShowModal] = useState(false);
   const navigate = useNavigate();
+  const toggleModal = () => {
+    setShowModal(!showModal);
+  };
 
   return (
     <div className="font-sans text-gray-900">
@@ -55,17 +59,36 @@ const Homepage = () => {
         </div>
       </section>
 
-      <section id="about-section" className="homepage-section">
-        <div className="homepage-section-title">About Us</div>
-        <div className="homepage-section-content">
-          Biz MuncH is a B2B mobile application designed exclusively for company employees, offering them access to special deals and discounts at local restaurants.
+      <section id="about-section" className="about-section">
+        <h2 className="section-title">About Us</h2>
+        <p className="section-description">
+          We provide simplified access to discount coupons for local restaurants.<br/>
+          A wide variety of digital coupons for various restaurants.<br/>
+          From fast food to specialized dietary options.<br/>
+          we aim to reduce both inconvenience and food costs,<br/>
+          Let us enhance your everyday dining experience.
+        </p>
+        <div className="benefits-box">
+          <ul className="benefits-list">
+            <li>Exclusive Discounts at Local Restaurants</li>
+            <li>Convenient Access via Mobile</li>
+            <li>Personalized Restaurant Recommendations</li>
+            <li>Effortless Dining with Easy-to-Redeem Coupons</li>
+          </ul>
         </div>
       </section>
 
       <section id="how-it-works-section" className="homepage-section bg-gray-100">
         <div className="homepage-section-title">How It Works</div>
         <div className="homepage-section-content">
-          Our platform is crafted to enhance your daily life, making it easier for you to enjoy your lunch breaks, after-work meals, and everything in between.
+          Once registered, each user receives a selection of 10 local restaurants offering exclusive discounts. 
+          Every Monday at midnight, the app refreshes the selection to give users new options, chosen completely at random. 
+          Restaurants that have been selected before may be chosen again.
+          <br /><br />
+          Users can pin up to 2 favorite restaurants each week, ensuring that they remain in the rotation for the following week's selection. 
+          This means that if you love a particular restaurant, you can easily pin it to continue enjoying its discounts.
+          <br /><br />
+          In addition to providing discounts, the app offers access to restaurant menus and Google Maps directions to make your dining experience even more convenient.
         </div>
       </section>
 
@@ -76,12 +99,28 @@ const Homepage = () => {
         </div>
       </section>
 
-      <section id="privacy-policy-section" className="homepage-section bg-gray-100">
+      <section id="privacy-policy-section" className="privacy-section">
         <div className="homepage-section-title">Privacy Policy</div>
         <div className="homepage-section-content">
-          Your privacy is important to us. Learn how we protect and manage your data.
+          <p>We value your privacy and want to ensure that your data is handled securely.</p>
+          <button onClick={toggleModal} className="view-privacy-btn">View Privacy Policy</button>
         </div>
       </section>
+
+      {showModal && (
+          <div className="modal">
+              <div className="modal-content">
+                  <span className="close" onClick={toggleModal}>&times;</span>
+                  <h2>Privacy Policy</h2>
+                  <p>
+                      We collect and use information solely for the purposes of providing users with access 
+                      to restaurant discounts. Your data will not be shared with third parties without your consent. 
+                      By using this app, you agree to our terms of service and consent to the collection and use 
+                      of your data as described in this policy.
+                  </p>
+              </div>
+          </div>
+        )}
     </div>
   );
 };
