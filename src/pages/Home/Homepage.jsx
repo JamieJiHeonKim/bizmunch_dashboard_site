@@ -1,16 +1,23 @@
 import React, { useState } from 'react';
+import Modal from 'react-modal';
 import { useNavigate } from 'react-router-dom';
-import "react-responsive-carousel/lib/styles/carousel.min.css"; // Import carousel styles
 import siteLogo from '../../assets/bizmunch-icon-grey.png';
 import backgroundImage from '../../assets/backgroundImage.jpg';
 import './Homepage.css';
 
+Modal.setAppElement('#root');
+
 const Homepage = () => {
-  const [showModal, setShowModal] = useState(false);
+  const [modalIsOpen, setModalIsOpen] = useState(false);
   const navigate = useNavigate();
-  const toggleModal = () => {
-    setShowModal(!showModal);
+  const openModal = () => {
+    setModalIsOpen(true);
+    document.body.style.overflow = 'hidden';
   };
+  const closeModal = () => {
+    setModalIsOpen(false);
+    document.body.style.overflow = 'auto';
+  }
 
   return (
     <div className="font-sans text-gray-900">
@@ -94,8 +101,13 @@ const Homepage = () => {
 
       <section id="pricing-section" className="homepage-section">
         <div className="homepage-section-title">Pricing</div>
-        <div className="homepage-section-content">
-          We offer competitive pricing for businesses of all sizes to provide exclusive discounts to their employees.
+        <div className="pricing-tiers">
+          <p className="homepage-section-content">
+              Our pricing is simple: <strong>$4 per worker per month.</strong><br/>
+              For example, an office with 50 employees will cost <strong>$200/month</strong>.<br/><br/>
+              Every employee gets access to our entire service, no hidden fees or extra charges.<br/>
+              We strive to make our services affordable and accessible to all companies.
+          </p>
         </div>
       </section>
 
@@ -103,24 +115,71 @@ const Homepage = () => {
         <div className="homepage-section-title">Privacy Policy</div>
         <div className="homepage-section-content">
           <p>We value your privacy and want to ensure that your data is handled securely.</p>
-          <button onClick={toggleModal} className="view-privacy-btn">View Privacy Policy</button>
+          <button onClick={openModal} className="view-privacy-btn">View Privacy Policy</button>
         </div>
       </section>
 
-      {showModal && (
-          <div className="modal">
-              <div className="modal-content">
-                  <span className="close" onClick={toggleModal}>&times;</span>
-                  <h2>Privacy Policy</h2>
-                  <p>
-                      We collect and use information solely for the purposes of providing users with access 
-                      to restaurant discounts. Your data will not be shared with third parties without your consent. 
-                      By using this app, you agree to our terms of service and consent to the collection and use 
-                      of your data as described in this policy.
-                  </p>
-              </div>
-          </div>
-        )}
+      <Modal
+        isOpen={modalIsOpen}
+        onRequestClose={closeModal}
+        contentLabel="Privacy Policy Modal"
+        className="modal-content"
+        overlayClassName="modal-overlay"
+      >
+        <div className="modal-header">
+          <h2>Privacy Policy</h2>
+        </div>
+        <div className="modal-body">
+          <p>
+            At <strong>Biz MuncH</strong>, we take your privacy seriously. This Privacy Policy outlines how we collect, 
+            use, and protect your personal data in compliance with applicable laws and industry standards.
+          </p>
+
+          <h3>Information We Collect</h3>
+          <p>We collect information directly from you when you use our mobile application. This includes:</p>
+          <ul>
+            <li><strong>Your email address and other contact details</strong> when you sign up or register an account.</li>
+            <li><strong>Location data</strong>, if enabled, to provide recommendations for local restaurants.</li>
+            <li><strong>Usage data</strong>, such as your interactions with the app, to help us improve our services.</li>
+          </ul>
+
+          <h3>How We Use Your Information</h3>
+          <p>We use your information to:</p>
+          <ul>
+            <li>Provide you access to restaurant discounts and services.</li>
+            <li>Improve your experience with personalized restaurant recommendations.</li>
+            <li>Communicate updates, offers, and other important information about our service.</li>
+          </ul>
+
+          <h3>Sharing Your Information</h3>
+          <p>
+            <strong>Biz MuncH</strong> does not sell or share your personal information with third parties, 
+            except for the purpose of providing our service to you (such as partnering with restaurants) 
+            or when required by law.
+          </p>
+
+          <h3>Your Rights</h3>
+          <p>
+            You have the right to access, update, or delete your personal information at any time. 
+            You can manage your account settings within the app or contact our support team for assistance.
+          </p>
+
+          <h3>Changes to This Policy</h3>
+          <p>
+            We may update this Privacy Policy from time to time. Any changes will be communicated via the app 
+            or email, and your continued use of Biz MuncH will signify your acceptance of those changes.
+          </p>
+
+          <h3>Contact Us</h3>
+          <p>
+            If you have any questions or concerns about our privacy practices, please contact us at 
+            <strong> admin@bizmunch.com</strong>.
+          </p>
+        </div>
+        <div className="modal-footer">
+          <button onClick={closeModal} className="modal-close-btn">Close</button>
+        </div>
+      </Modal>
     </div>
   );
 };
