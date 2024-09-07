@@ -103,8 +103,8 @@ const Homepage = () => {
         <div className="homepage-section-title">Pricing</div>
         <div className="pricing-tiers">
           <p className="homepage-section-content">
-              Our pricing is simple: <strong>$4 per worker per month.</strong><br/>
-              For example, an office with 50 employees will cost <strong>$200/month</strong>.<br/><br/>
+              Our pricing is simple: <strong>$2 per worker per month.</strong><br/>
+              For example, an office with 50 employees will cost <strong>$100/month</strong>.<br/><br/>
               Every employee gets access to our entire service, no hidden fees or extra charges.<br/>
               We strive to make our services affordable and accessible to all companies.
           </p>
