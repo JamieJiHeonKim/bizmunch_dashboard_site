@@ -103,10 +103,10 @@ const Homepage = () => {
         <div className="homepage-section-title">Pricing</div>
         <div className="pricing-tiers">
           <p className="homepage-section-content">
-              Our pricing is simple: <strong>$2 per worker per month.</strong><br/>
-              For example, an office with 50 employees will cost <strong>$100/month</strong>.<br/><br/>
-              Every employee gets access to our entire service, no hidden fees or extra charges.<br/>
-              We strive to make our services affordable and accessible to all companies.
+            Our app is completely <strong>FREE</strong> for users!<br/><br/>
+            Enjoy exclusive <strong>discounts</strong> and <strong>offers</strong> at local restaurants without paying a subscription fee.<br/><br/>
+            We sustain our service through in-app advertisements, ensuring you get the best deals at no cost.<br/><br/>
+            Stay tuned for discounts and offers, while ads help keep the service accessible and growing.
           </p>
         </div>
       </section>
