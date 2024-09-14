@@ -11,7 +11,6 @@ function CREATE_RESTAURANT({ refresh }) {
   const [managerEmail, setManagerEmail] = useState('');
   const [category, setCategory] = useState('');
   const [logo, setLogo] = useState(null);
-  const [barcode, setBarcode] = useState(null);
 
   const resetForm = () => {
     setName('');
@@ -20,16 +19,11 @@ function CREATE_RESTAURANT({ refresh }) {
     setManagerEmail('');
     setCategory('');
     setLogo(null);
-    setBarcode(null);
   };
 
   const handlePost = useCallback(async () => {
     if (!logo) {
       toast.error('Please upload a logo.');
-      return;
-    }
-    if (!barcode) {
-      toast.error('Please upload a coupon barcode.');
       return;
     }
 
@@ -40,7 +34,6 @@ function CREATE_RESTAURANT({ refresh }) {
     formData.append('managerEmail', managerEmail);
     formData.append('category', category);
     formData.append('logo', logo);
-    formData.append('barcode', barcode);
 
     setLoading(true);
     try {
@@ -59,14 +52,10 @@ function CREATE_RESTAURANT({ refresh }) {
     } finally {
       setLoading(false);
     }
-  }, [name, location, managerName, managerEmail, category, logo, barcode, refresh]);
+  }, [name, location, managerName, managerEmail, category, logo, refresh]);
 
   function handleLogoChange(event) {
     setLogo(event.target.files[0]);
-  }
-
-  function handleBarcodeChange(event) {
-    setBarcode(event.target.files[0]);
   }
 
   const categories = ['Asian', 'Fastfood', 'Café', 'Grill', 'Vegetarian', 'Spicy', 'American', 'Pizza', 'Dessert'];
@@ -151,20 +140,9 @@ function CREATE_RESTAURANT({ refresh }) {
             />
           </div>
 
-          <div className="flex flex-col gap-2">
-            <h1>Coupon Barcode</h1>
-            <input
-              type="file"
-              name="barcode"
-              onChange={handleBarcodeChange}
-              className="w-full border rounded-md p-2 file:bg-violet-50 file:border-none"
-              accept="image/png, image/jpeg"
-            />
-          </div>
-
           <button
             onClick={handlePost}
-            disabled={loading || !name || !location || !managerName || !managerEmail || !category || !logo || !barcode}
+            disabled={loading || !name || !location || !managerName || !managerEmail || !category || !logo}
             className="btn text-white bg-[#F58549]"
           >
             Create

@@ -5,7 +5,6 @@ import { get_image } from '../../../services/api';
 
 function VIEW_RESTAURANT(props) {
   const [imageUrl, setImageUrl] = useState('');
-  const [barcodeUrl, setBarcodeUrl] = useState('');
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
@@ -13,13 +12,10 @@ function VIEW_RESTAURANT(props) {
     const fetchImages = async () => {
       try {
         const logoUrl = props.restaurant.logo ? await get_image(props.restaurant.logo) : "/path/to/default/or/error/image.png";
-        const barcodeUrl = props.restaurant.barcode ? await get_image(props.restaurant.barcode) : "/path/to/default/or/error/image.png";
         setImageUrl(logoUrl);
-        setBarcodeUrl(barcodeUrl); // Set the barcode image URL
       } catch (error) {
         console.error("Error fetching images:", error);
         setImageUrl("/path/to/default/or/error/image.png");
-        setBarcodeUrl("/path/to/default/or/error/image.png"); // Set default/error barcode image
       } finally {
         setLoading(false);
       }
@@ -61,10 +57,6 @@ function VIEW_RESTAURANT(props) {
                 <div>
                   <h1>Logo</h1>
                   <img src={imageUrl} alt="Restaurant Logo" style={{ width: '100%', display: 'block', margin: 'auto' }} />
-                </div>
-                <div>
-                  <h1>Barcode</h1>
-                  <img src={barcodeUrl} alt="Restaurant Barcode" style={{ width: '100%', display: 'block', margin: 'auto' }} />
                 </div>
               </>
             )}

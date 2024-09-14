@@ -96,7 +96,7 @@ function AdminSignin() {
             <p>
               {/* <span className="text-[#98A2B3]">Are you a Company Staff?</span>{" "} */}
               <a href="/manager/signin" className="text-[#F58549]">
-                Sign in Manager
+                Sign in as Manager
               </a>
             </p>
           </div>

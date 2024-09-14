@@ -3,15 +3,22 @@ import AdminLayout from "../../layout/Admin";
 import ProfileButton from "../../components/Profile_Btn";
 import { useSelector } from "react-redux";
 import { selectUser } from "../../redux/states/user";
-import { Add, DeleteOutline, EditOutlined } from "@mui/icons-material";
+import {
+  Add,
+  VisibilityOutlined,
+  DeleteOutline,
+  EditOutlined,
+} from "@mui/icons-material";
+import VIEW_MENU from "../../components/modals/admin/View_Menu";
 import CREATE_MENU from "../../components/modals/admin/Create_Menu";
 import DELETE_MENU from "../../components/modals/admin/Delete_Menu";
 import EDIT_MENU from "../../components/modals/admin/Edit_Menu";
 import { useLocation } from "react-router-dom";
 import { Get_Restaurant_Details } from "../../services/api";
 
-function RestaurantDetails(props) {
-  const [menuItems, setMenuItems] = useState([]); // Initialize as an empty array
+function RestaurantDetails() {
+  const [menuItems, setMenuItems] = useState([]);
+  const [loading, setLoading] = useState(false);
   const user = useSelector(selectUser);
   const location = useLocation();
   const restaurantDetails = location.state?.restaurant;
@@ -19,9 +26,8 @@ function RestaurantDetails(props) {
   useEffect(() => {
     async function fetchMenuData() {
       try {
+        setLoading(true);
         const details = await Get_Restaurant_Details(restaurantDetails._id);
-
-        // Flatten the menu structure
         const menuData = [];
         if (details.menu) {
           for (const type in details.menu) {
@@ -31,18 +37,19 @@ function RestaurantDetails(props) {
                   menuData.push({
                     name,
                     type,
-                    ...details.menu[type][name]
+                    ...details.menu[type][name],
                   });
                 }
               }
             }
           }
         }
-
         setMenuItems(menuData);
       } catch (error) {
         console.error("Failed to fetch menu data:", error);
-        setMenuItems([]); // Ensure menuItems is always an array even on error
+        setMenuItems([]);
+      } finally {
+        setLoading(false);
       }
     }
 
@@ -53,9 +60,10 @@ function RestaurantDetails(props) {
 
   return (
     <AdminLayout>
+      <VIEW_MENU menu={menuItems} restaurantDetails={restaurantDetails} />
       <CREATE_MENU restaurant={restaurantDetails} />
       <DELETE_MENU menu={menuItems} />
-      <EDIT_MENU menu={menuItems} />
+      <EDIT_MENU menu={menuItems} restaurantDetails={restaurantDetails} />
       <div className="w-full h-full">
         <div className="flex justify-end">
           <ProfileButton name={user?.name} redir="/admin/signin" />
@@ -65,6 +73,9 @@ function RestaurantDetails(props) {
             <h1 className="text-[#F58549] text-2xl font-medium ">
               {restaurantDetails?.name} Menu
             </h1>
+            {loading && (
+              <span className="loading loading-spinner loading-sm text-[#F58549]"></span>
+            )}
           </div>
           <button
             onClick={() => document.getElementById("Create_Menu").showModal()}
@@ -73,22 +84,18 @@ function RestaurantDetails(props) {
             <Add /> Add Menu
           </button>
         </div>
-
-        {/* Menu list header */}
         <Header />
-
-        {/* List of menu items */}
-        {menuItems.length > 0 ? (
-          menuItems.map((menuItem, index) => (
-            <Item
-              setMenu={setMenuItems}
-              menu={menuItem}
-              key={index}
-            />
-          ))
-        ) : (
-          <p>No menu items available.</p>
-        )}
+        <div>
+          {loading ? (
+            <p>Loading menu items...</p>
+          ) : menuItems.length > 0 ? (
+            menuItems.map((menuItem, index) => (
+              <Item key={index} setMenu={setMenuItems} menu={menuItem} />
+            ))
+          ) : (
+            <p>No menu items available.</p>
+          )}
+        </div>
       </div>
     </AdminLayout>
   );
@@ -103,7 +110,7 @@ function Header() {
       <h1>Type</h1>
       <h1>Price</h1>
       <h1>Calories</h1>
-      <h1>Ingredients</h1>
+      <h1>Discount</h1>
       <h1>Actions</h1>
     </div>
   );
@@ -116,11 +123,14 @@ function Item({ setMenu, menu }) {
       <h1>{menu.type}</h1>
       <h1>{menu.price}</h1>
       <h1>{menu.calories}</h1>
-      <h1>{menu.ingredients.join(", ")}</h1>
-      <div
-        className="text-xs text-[#F58549] flex gap-4"
-        onClick={() => setMenu(menu)}
-      >
+      <h1>{menu.discount}</h1>
+      <div className="text-xs text-[#F58549] flex gap-4">
+        <button
+          className="outline-none"
+          onClick={() => document.getElementById("View_Menu").showModal()}
+        >
+          <VisibilityOutlined style={{ fontSize: "20px" }} />
+        </button>
         <button
           className="outline-none"
           onClick={() => document.getElementById("Edit_Menu").showModal()}

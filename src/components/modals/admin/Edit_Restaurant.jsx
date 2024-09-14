@@ -4,7 +4,6 @@ import { Admin_Edit_Restaurant, get_image } from "../../../services/api";
 import toast from "react-hot-toast";
 
 function EDIT_RESTAURANT(props) {
-  console.log("edit restaurant props:", props);
   const [restaurant, setRestaurant] = useState({
     name: "",
     managerName: "",
@@ -13,12 +12,9 @@ function EDIT_RESTAURANT(props) {
     category: ""
   });
   const [imageUrl, setImageUrl] = useState('');
-  const [barcodeUrl, setBarcodeUrl] = useState('');
   const [fileLogo, setFileLogo] = useState(null);
-  const [fileBarcode, setFileBarcode] = useState(null);
   const [loading, setLoading] = useState(false);
   const fileInputLogoRef = useRef();
-  const fileInputBarcodeRef = useRef();
   const categories = ['Asian', 'Fastfood', 'Café', 'Grill', 'Vegetarian', 'Spicy', 'American', 'Pizza', 'Dessert'];
 
   useEffect(() => {
@@ -33,18 +29,11 @@ function EDIT_RESTAURANT(props) {
       }));
 
       setImageUrl('');
-      setBarcodeUrl('');
 
       if (props.restaurant.logo) {
         get_image(props.restaurant.logo)
           .then(setImageUrl)
-          .catch(() => setImageUrl("/path/to/default/or/error/image.png"));
-      }
-
-      if (props.restaurant.barcode) {
-        get_image(props.restaurant.barcode)
-          .then(setBarcodeUrl)
-          .catch(() => setBarcodeUrl("/path/to/default/or/error/image.png"));
+          .catch(() => console.log('there is no barcode iamge.'));
       }
     }
   }, [props.restaurant]);
@@ -54,10 +43,9 @@ function EDIT_RESTAURANT(props) {
       setLoading(true);
       const formData = new FormData();
       Object.keys(restaurant).forEach(key => {
-        if (key !== "logo" && key !== "barcode") formData.append(key, restaurant[key]);
+        if (key !== "logo") formData.append(key, restaurant[key]);
       });
       if (fileLogo) formData.append('logo', fileLogo);
-      if (fileBarcode) formData.append('barcode', fileBarcode);
 
       const res = await Admin_Edit_Restaurant(props.restaurant._id, formData);
       if (res.status === 200) {
@@ -150,17 +138,6 @@ function EDIT_RESTAURANT(props) {
               className="w-full border rounded-md p-2 outline-sky-200"
             />
             {imageUrl && <img src={imageUrl} alt="Restaurant Logo" className="mt-4" />}
-          </div>
-
-          <div className="flex flex-col gap-2">
-            <h1>Barcode</h1>
-            <input
-              type="file"
-              ref={fileInputBarcodeRef}
-              onChange={(e) => setFileBarcode(e.target.files[0])}
-              className="w-full border rounded-md p-2 outline-sky-200"
-            />
-            {barcodeUrl && <img src={barcodeUrl} alt="Restaurant Barcode" className="mt-4" />}
           </div>
 
           <button
