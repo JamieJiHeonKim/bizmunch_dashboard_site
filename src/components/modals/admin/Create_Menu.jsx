@@ -9,11 +9,21 @@ function CREATE_MENU({ restaurant }) {
   const [type, setType] = useState('');
   const [price, setPrice] = useState('');
   const [calories, setCalories] = useState('');
-  const [ingredients, setIngredients] = useState('');
+  const [description, setDescription] = useState('');
+  const [barcode, setBarcode] = useState(null);
+  const [discount, setDiscount] = useState(false);
 
   const types = ['Starters', 'Mains', 'Desserts', 'Drinks'];
+  const discounts = [true, false];
 
-  const handlePost = useCallback(async () => {  
+  const handlePost = useCallback(async (event) => {
+    event.preventDefault();
+
+    if (discount && !barcode) {
+      toast.error('Please upload a barcode as discount is selected.');
+      return;
+    }
+
     const formData = new FormData();
     formData.append('restaurantName', restaurant.name);
     formData.append('restaurantId', restaurant._id);
@@ -21,8 +31,14 @@ function CREATE_MENU({ restaurant }) {
     formData.append('name', name);
     formData.append('price', price);
     formData.append('calories', calories);
-    formData.append('ingredients', ingredients);
-  
+    formData.append('description', description);
+    formData.append('discount', discount);
+
+    // Append barcode if exists
+    if (barcode) {
+      formData.append('barcode', barcode);  // File is appended directly
+    }
+
     setLoading(true);
     try {
       const response = await Admin_Create_Menu(formData);
@@ -30,15 +46,15 @@ function CREATE_MENU({ restaurant }) {
         document.getElementById('Create_Menu').close();
         toast.success('Menu Created Successfully');
       } else {
-        toast.error('Creating a Menu Failed.');
+        toast.error('Failed to create menu.');
       }
     } catch (error) {
-      console.error('Network or server error', error);
+      console.error('Error occurred during menu creation:', error);
       toast.error('Network or server error');
     } finally {
       setLoading(false);
     }
-  }, [restaurant.name, restaurant._id, name, type, price, calories, ingredients]);  
+  }, [restaurant.name, restaurant._id, name, type, price, calories, description, discount, barcode]);
 
   return (
     <dialog id="Create_Menu" className="modal">
@@ -98,20 +114,47 @@ function CREATE_MENU({ restaurant }) {
           </div>
 
           <div className="flex flex-col gap-2">
-            <h1>Ingredients</h1>
-            <input
+            <h1>Description</h1>
+            <textarea
               disabled={loading}
-              value={ingredients}
-              onChange={(e) => setIngredients(e.target.value)}
-              type="text"
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               className="w-full border rounded-md p-2 outline-sky-200"
-              placeholder="Enter Ingredients"
+              placeholder="Enter Description"
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <h1>Discount Status</h1>
+            <select
+              disabled={loading}
+              value={discount}
+              onChange={(e) => setDiscount(e.target.value === 'true')}
+              className="w-full border rounded-md p-2 outline-sky-200"
+            >
+              <option value="" disabled>Please select discount status</option>
+              {discounts.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat ? 'Yes' : 'No'}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <h1>Menu Discount Barcode</h1>
+            <input
+              type="file"
+              name="barcode"
+              onChange={(e) => setBarcode(e.target.files[0])}
+              className="w-full border rounded-md p-2 file:bg-violet-50 file:border-none"
+              accept="image/png, image/jpeg"
             />
           </div>
 
           <button
             onClick={handlePost}
-            disabled={loading || !name || !price || !calories || !ingredients}
+            disabled={loading || !name || !price || !calories || !description}
             className="btn text-white bg-[#F58549]"
           >
             Create

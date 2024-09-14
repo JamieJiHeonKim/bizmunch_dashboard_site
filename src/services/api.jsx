@@ -7,8 +7,6 @@ export const get_image = (imageId) => {
     console.error("Invalid image ID");
     return Promise.resolve("/path/to/default/or/error/image.png"); // Resolve with a default or error image URL
   }
-  console.log("imageId: ", imageId)
-
   const imageUrl = `${url}/users/dashboard/images/${imageId}`;
   const token = sessionStorage.getItem("Token"); // Retrieve the bearer token from sessionStorage
 
@@ -85,34 +83,36 @@ export const Get_Restaurant_Details = async (restaurantId) => {
 };
 
 export const Admin_Create_Menu = async (formData) => {
-  const config = {
+  let config = {
     method: "post",
     url: `${url}/users/dashboard/menu/${formData.get('restaurantId')}`,
     headers: {
-      Authorization: `Bearer ${get_token()}`,
-      "Content-Type": "application/json",
+      Authorization: `Bearer ${get_token()}`
     },
-    data: {
-      restaurantId: formData.get('restaurantId'),
-      restaurantName: formData.get('restaurantName'),
-      type: formData.get('type'),
-      name: formData.get('name'),
-      price: formData.get('price'),
-      calories: formData.get('calories'),
-      ingredients: formData.get('ingredients'),
-    },
+    data: formData
   };
-  return axios(config);
+  return axios(config)
+    .then(response => response.data)
+    .catch(error => {
+      console.error('Error creating restaurant:', error);
+      throw error;
+    })
 };
 
 export const Admin_Edit_Menu = async (restaurantId, menuId, menuItem) => {
-  try {
-    const response = await axios.put(`${url}/users/dashboard/restaurant/menu/${restaurantId}/${menuId}`, menuItem);
-    return response.data;
-  } catch (error) {
-    console.error('Error editing menu:', error);
-    throw error;
-  }
+  const config = {
+    method: "put",
+    url: `${url}/users/dashboard/restaurant/menu/${restaurantId}/${menuId}`,
+    headers: {
+      Authorization: `Bearer ${get_token()}`,
+    },
+    data: {
+      ...menuItem,
+      discount: menuItem.discount,
+      barcode: menuItem.barcode,
+    },
+  };
+  return axios(config);
 };
 
 export const Admin_Delete_Menu = async (restaurantId, menuId) => {
@@ -158,7 +158,7 @@ export const Admin_Create_Restaurant = async (formData) => {
     .catch(error => {
       console.error('Error creating restaurant:', error);
       throw error;
-    });
+  });
 };
 
 export const Admin_Delete_Company = async (id) => {

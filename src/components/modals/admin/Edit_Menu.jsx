@@ -1,29 +1,40 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import MODAL_HEADER from '../../Modal_Header';
 import { Admin_Edit_Menu, get_image } from '../../../services/api';
 import toast from 'react-hot-toast';
 
-function EDIT_MENU({ menu, refresh }) {
+function EDIT_MENU({ menu, restaurantDetails, refresh }) {
+  console.log('menu.restaurantId:', menu.restaurantId);
+  console.log('menu._id:', menu._id);
+  console.log('restaurantDetails._id:', restaurantDetails._id);
   const [loading, setLoading] = useState(false);
   const [name, setName] = useState('');
+  const [type, setType] = useState('');
   const [price, setPrice] = useState('');
   const [calories, setCalories] = useState('');
-  const [ingredients, setIngredients] = useState('');
-  const [image, setImage] = useState(null);
+  const [description, setDescription] = useState('');
+  const [barcode, setBarcode] = useState(null);
+  const [discount, setDiscount] = useState(false);
+  const fileInputBarcodeRef = useRef();
+  const types = ['Starters', 'Mains', 'Desserts', 'Drinks'];
+  const discounts = [true, false];
   const [imageUrl, setImageUrl] = useState('');
 
   useEffect(() => {
     if (menu) {
       setName(menu.name || '');
+      setType(menu.type || '');
       setPrice(menu.price || '');
       setCalories(menu.calories || '');
-      setIngredients(menu.ingredients || '');
+      setDescription(menu.description || '');
+      setBarcode(menu.barcode || null);
+      setDiscount(menu.discount || false);
       setImageUrl('');
 
-      if (menu.image) {
-        get_image(menu.image)
+      if (menu.barcode) {
+        get_image(menu.barcode)
           .then(setImageUrl)
-          .catch(() => setImageUrl('/path/to/default/or/error/image.png'));
+          .catch(() => console.log('there is no barcode iamge.'))
       }
     }
   }, [menu]);
@@ -33,12 +44,14 @@ function EDIT_MENU({ menu, refresh }) {
       setLoading(true);
       const formData = new FormData();
       formData.append('name', name);
+      formData.append('type', type);
       formData.append('price', price);
       formData.append('calories', calories);
-      formData.append('ingredients', ingredients);
-      if (image) formData.append('image', image);
+      formData.append('description', description);
+      formData.append('barcode', barcode);
+      formData.append('discount', discount);
 
-      const response = await Admin_Edit_Menu(menu._id, formData);
+      const response = await Admin_Edit_Menu(restaurantDetails._id, restaurantDetails._id, formData);
       if (response) {
         document.getElementById('Edit_Menu').close();
         toast.success('Menu Item Updated Successfully');
@@ -54,10 +67,6 @@ function EDIT_MENU({ menu, refresh }) {
     }
   };
 
-  function handleImageChange(event) {
-    setImage(event.target.files[0]);
-  }
-
   return (
     <dialog id="Edit_Menu" className="modal">
       <div className="modal-box p-12">
@@ -72,6 +81,23 @@ function EDIT_MENU({ menu, refresh }) {
               className="w-full border rounded-md p-2 outline-sky-200"
               placeholder="Enter Menu Name"
             />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <h1>Type of Menu</h1>
+            <select
+              disabled={loading}
+              value={type}
+              onChange={(e) => setType(e.target.value)}
+              className="w-full border rounded-md p-2 outline-sky-200"
+            >
+              <option value="" disabled>Please select a type</option>
+              {types.map((type) => (
+                <option key={type} value={type}>
+                  {type}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="flex flex-col gap-2">
@@ -99,32 +125,48 @@ function EDIT_MENU({ menu, refresh }) {
           </div>
 
           <div className="flex flex-col gap-2">
-            <h1>Ingredients</h1>
+            <h1>Description</h1>
             <input
               disabled={loading}
-              value={ingredients}
-              onChange={(e) => setIngredients(e.target.value)}
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
               type="text"
               className="w-full border rounded-md p-2 outline-sky-200"
-              placeholder="Enter Ingredients"
+              placeholder="Enter Description"
             />
           </div>
 
           <div className="flex flex-col gap-2">
-            <h1>Image</h1>
+            <h1>Discount Status</h1>
+            <select
+              disabled={loading}
+              value={discount}
+              onChange={(e) => setDiscount(e.target.value === 'true')}
+              className="w-full border rounded-md p-2 outline-sky-200"
+            >
+              <option value="" disabled>Please select discount status</option>
+              {discounts.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat ? 'Yes' : 'No'}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <h1>Menu Discount Barcode</h1>
             <input
               type="file"
-              name="image"
-              onChange={handleImageChange}
-              className="w-full border rounded-md p-2 file:bg-violet-50 file:border-none"
-              accept="image/png, image/jpeg"
+              ref={fileInputBarcodeRef}
+              onChange={(e) => setBarcode(e.target.files[0])}
+              className="w-full border rounded-md p-2 outline-sky-200"
             />
-            <img src={imageUrl} alt={name ? `Image of ${name}` : 'Menu Image'} className="mt-4" />
+            {imageUrl && <img src={imageUrl} alt="Restaurant Logo" className="mt-4" />}
           </div>
 
           <button
             onClick={handleUpdate}
-            disabled={loading || !name || !price || !calories || !ingredients}
+            disabled={loading || !name || !price || !calories || !description}
             className="btn text-white bg-[#F58549]"
           >
             Save
