@@ -12,6 +12,7 @@ function CREATE_MENU({ restaurant }) {
   const [description, setDescription] = useState('');
   const [barcode, setBarcode] = useState(null);
   const [discount, setDiscount] = useState(false);
+  const [image, setImage] = useState(null);
 
   const types = ['Starters', 'Mains', 'Desserts', 'Drinks'];
   const discounts = [true, false];
@@ -34,9 +35,12 @@ function CREATE_MENU({ restaurant }) {
     formData.append('description', description);
     formData.append('discount', discount);
 
-    // Append barcode if exists
     if (barcode) {
-      formData.append('barcode', barcode);  // File is appended directly
+      formData.append('barcode', barcode);
+    }
+
+    if (image) {
+      formData.append('image', image);
     }
 
     setLoading(true);
@@ -54,7 +58,7 @@ function CREATE_MENU({ restaurant }) {
     } finally {
       setLoading(false);
     }
-  }, [restaurant.name, restaurant._id, name, type, price, calories, description, discount, barcode]);
+  }, [restaurant.name, restaurant._id, name, type, price, calories, description, discount, barcode, image]);
 
   return (
     <dialog id="Create_Menu" className="modal">
@@ -147,6 +151,17 @@ function CREATE_MENU({ restaurant }) {
               type="file"
               name="barcode"
               onChange={(e) => setBarcode(e.target.files[0])}
+              className="w-full border rounded-md p-2 file:bg-violet-50 file:border-none"
+              accept="image/png, image/jpeg"
+            />
+          </div>
+
+          <div className="flex flex-col gap-2">
+            <h1>Menu Image</h1>
+            <input
+              type="file"
+              name="image"
+              onChange={(e) => setImage(e.target.files[0])}
               className="w-full border rounded-md p-2 file:bg-violet-50 file:border-none"
               accept="image/png, image/jpeg"
             />
