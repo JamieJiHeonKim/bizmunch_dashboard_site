@@ -7,11 +7,15 @@ WORKDIR /app
 # Copy the package.json and package-lock.json files
 COPY package*.json ./
 
-# Install dependencies
-RUN npm install
+# Install dependencies with clean install
+RUN npm ci --only=production=false
 
 # Copy the rest of the application files
 COPY . .
+
+# Set environment variables for build
+ENV GENERATE_SOURCEMAP=false
+ENV NODE_OPTIONS=--max_old_space_size=4096
 
 # Build the React application
 RUN npm run build
@@ -23,4 +27,4 @@ RUN npm install -g serve
 EXPOSE 3000
 
 # Start the React app using serve
-CMD ["serve", "-s", "build"]
+CMD ["serve", "-s", "build", "-l", "3000"]
