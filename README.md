@@ -604,4 +604,8 @@ MIT License - See LICENSE file for details
 
 ---
 
+**Related Repositories**:
+- Dashboard Frontend (React): [bizmunch-dashboard-site](https://github.com/JamieJiHeonKim/bizmunch_dashboard_services)
+- Mobile App (React Native): *Unfortunately the mobile app is not available for showcase*
+
 **Note:** This is the dashboard frontend only. The backend API and React Native mobile app are in separate repositories.
