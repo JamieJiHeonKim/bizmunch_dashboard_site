@@ -1,263 +1,397 @@
 # Biz MuncH Dashboard Frontend
 
-A comprehensive management dashboard for the Biz MuncH mobile app ecosystem.
-This repo servers for enabling administrators and restaurant managers to control discount campaigns, menu items, user accounts, and real-time data that feeds directly into the customer-facing mobile application.
+A comprehensive management dashboard for the Biz MuncH restaurant discount platform. This admin/manager interface enables real-time control of companies, restaurants, menus, discounts, and user accounts - all syncing instantly to the consumer-facing mobile app via MongoDB.
 
-## Overview
+**Backend Repository:** [bizmunch-backend](https://github.com/JamieJiHeonKim/bizmunch_dashboard_services)
 
-Biz MuncH is a mobile app that connects users with exclusive discounts at local restaurants. Every week, users receive a curated selection of 10 restaurants with special offers, rotating every Monday at midnight. This dashboard serves as the central system of the entire operation. Dashboard is where admins create companies, onboard restaurants, upload menus, set discount percentages, and manage the entire user ecosystem.
+### Application Workflow
 
-**The problem this solves:** Restaurant partners need an easy way to manage their offerings, admins need oversight of the entire platform, and all changes need to reflect immediately in the mobile app. This dashboard bridges that gap with real-time MongoDB integration.
+1. **Login as Admin**
+   - Navigate to `/admin/signin`
+   - Enter your admin credentials
+   - System redirects to Companies page
+
+2. **Create a Company**
+   - Click "Add Company" button
+   - Upload company logo
+   - Enter company name and manager email
+   - Company appears instantly in the list
+
+3. **Add a Restaurant**
+   - Go to Restaurants tab
+   - Click "Add Restaurant"
+   - Set restaurant name, location, category (Asian, Fastfood, Café, etc.)
+   - Upload restaurant logo
+   - Assign a manager
+
+4. **Upload Menu Items**
+   - Click on a restaurant to view details
+   - Click "Add Menu Item"
+   - Upload food photo, set name, price, discount percentage
+   - Menu item syncs to MongoDB → Mobile app users see it immediately
+
+5. **Manage Users**
+   - Go to Users tab
+   - Create manager accounts assigned to specific companies
+   - View all users (managers + employees) with filter options
+   - Edit or delete user accounts
+
+---
+
+## Technologies Used
+
+### Frontend Stack
+- **React 18** - Modern UI with functional components and hooks
+- **React Router v6** - Client-side routing with role-based protection
+- **Redux Toolkit** - State management for auth and global data
+- **Redux Persist** - Persist auth state to sessionStorage
+- **Axios** - HTTP client with interceptors for API calls
+- **Material-UI (MUI)** - Icon system and some UI components
+- **Tailwind CSS** - Utility-first CSS framework
+- **DaisyUI** - Pre-built Tailwind components (modals, buttons, spinners)
+
+### Data Visualization
+- **Chart.js + react-chartjs-2** - Line and bar charts for analytics
+- **Recharts** - Complex data visualizations for manager dashboard
+
+### Form Handling & Validation
+- **React Hot Toast** - Toast notifications for CRUD feedback
+- **React Datepicker** - Date range pickers for transaction filtering
+
+### Deployment & DevOps
+- **Docker** - Multi-stage containerized builds
+- **Railway** - Cloud deployment platform
+- **Nixpacks** - Railway's build system configuration
+- **Serve** - Static file server for production builds
+
+---
 
 ## System Architecture
 
-### The Big Picture
+### Design Rationale
+
+This architecture was built to support **role-based access control**, **real-time data synchronization**, and **scalable operations** for a restaurant discount platform.
+
+**Key Design Decisions:**
+
+1. **Decoupled Frontend/Backend (REST API)**
+   - **Why:** Allows dashboard and mobile app to share the same backend, enabling consistent business logic and data access
+   - **Usage:** Dashboard admins update restaurants → Backend validates and writes to MongoDB → Mobile app users see changes in real-time
+
+2. **Role-Based Architecture (Admin/Manager/Employee)**
+   - **Why:** Different user types need different access levels and workflows (admins manage everything, managers handle their restaurants, employees track transactions)
+   - **Usage:** JWT tokens contain role claims; frontend routes and backend endpoints enforce role-based permissions
+
+3. **Redux + Redux Persist for Auth State**
+   - **Why:** User role determines entire UI experience; must persist across page refreshes; needed globally across 30+ components
+   - **Usage:** After login, Redux stores user object (email, role, token); Redux Persist saves to sessionStorage; protected routes check role before rendering
+
+4. **Centralized API Layer**
+   - **Why:** Single source of truth for backend URL, consistent error handling, automatic token injection
+   - **Usage:** All API calls go through `services/api.jsx`; Axios interceptors add Bearer tokens to every request
+
+5. **Modal-Based CRUD Operations**
+   - **Why:** Keeps UI clean, allows multiple operations without page navigation, better UX than full-page forms
+   - **Usage:** Every entity (company, restaurant, menu, user) has Create/Edit/Delete/View modals triggered by button clicks
+
+6. **Real-Time MongoDB Integration**
+   - **Why:** Dashboard changes must reflect instantly in mobile app; no batch processing or caching delays
+   - **Usage:** Admin uploads menu photo → Backend saves to MongoDB → Mobile app queries same collection → Users see new menu item immediately
+
+**Real-World Usage:**
+- Admin creates restaurant → Uploads 10 menu items with photos → Sets 20% discount on all items → Manager logs in → Sees analytics dashboard with transaction history → Employee redeems discount via mobile app barcode → Manager records transaction in dashboard → Profit charts update in real-time
+
+### High-Level Design
 
 ```
-Dashboard (React) ⟷ REST API ⟷ MongoDB ⟷ Mobile App (React Native)
+┌─────────────────────────────────────────────────────────────┐
+│                        Client Layer                         │
+│  ┌──────────────┐   ┌──────────────┐   ┌──────────────┐     │
+│  │  Admin Web   │   │ Manager Web  │   │  Mobile App  │     │
+│  │  Dashboard   │   │  Dashboard   │   │  (React      │     │
+│  │   (React)    │   │   (React)    │   │  Native)     │     │
+│  └──────┬───────┘   └──────┬───────┘   └──────┬───────┘     │
+│         │                  │                  │             │
+│         └──────────────────┼──────────────────┘             │
+│                            │                                │
+└────────────────────────────┼────────────────────────────────┘
+                             │ HTTPS (JWT Bearer Token)
+┌────────────────────────────┼────────────────────────────────┐
+│                  Railway (Dashboard Frontend)               │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │            React SPA (Static Build)                │     │
+│  │  • Role-based Routing  • Redux Store               │     │
+│  │  • Protected Routes    • Modal Components          │     │
+│  └────────────────────────────────────────────────────┘     │
+└────────────────────────────┬────────────────────────────────┘
+                             │ REST API (Axios)
+┌────────────────────────────┼────────────────────────────────┐
+│                  Backend API Server (Node.js)               │
+│  ┌────────────────────────────────────────────────────┐     │
+│  │              Express.js REST API                   │     │
+│  │  • JWT Authentication  • Role Middleware           │     │
+│  │  • File Upload (Multer) • Business Logic           │     │
+│  │  • Image Storage       • Data Validation           │     │
+│  └────────────────────────────────────────────────────┘     │
+└────────────────────────────┬────────────────────────────────┘
+                             │ Mongoose ODM
+                    ┌────────▼────────┐
+                    │    MongoDB      │
+                    │    Database     │
+                    │                 │
+                    │ Collections:    │
+                    │ • users         │
+                    │ • companies     │
+                    │ • restaurants   │
+                    │ • menus         │
+                    │ • transactions  │
+                    │ • notifications │
+                    └─────────────────┘
 ```
 
-This dashboard is the **admin/manager interface** for a larger ecosystem:
-- **Frontend**: React-based SPA with role-based routing
-- **Backend**: RESTful API (not in this repo) that handles authentication, data validation, and business logic
-- **Database**: MongoDB for real-time data persistence
-- **Mobile App**: Separate React Native app (not in this repo) that consumers use
-
-All CRUD operations performed in this dashboard write directly to MongoDB, and the mobile app reads from the same database - meaning any menu update, discount change, or restaurant addition appears instantly for end users.
-
-### Role-Based Architecture
-
-The system supports three distinct user types with isolated workflows:
-
-**Admin Portal:** (So far only Admin Portal is fully working)
-- Manage all companies (restaurant groups) and individual restaurants
-- Create manager accounts and assign them to companies
-- Upload restaurant logos, menus, and set discount percentages
-- Send platform-wide notifications (Not completed)
-- View all users (managers and employees) across the system
-
-**Manager Portal:** (Not yet completed)
-- View dashboard analytics for their assigned restaurant(s)
-- Manage employee accounts for their company
-- Create transaction records when discounts are redeemed
-- Track popular products and recent transaction history
-- Receive company-specific notifications from admins
-
-**Employee Portal:** (Not yet started)
-- View personal dashboard
-- Access notifications
-- Manage account settings and password changes
-- Browse available restaurant discounts (future feature)
-
-## Tech Stack & Why I Chose Each
-
-### Frontend Framework
-**React 18** with functional components and hooks throughout. I went with React because:
-- Component reusability (modals, forms, and layout wrappers are used across 20+ pages)
-- Virtual DOM for efficient updates when admins are managing large datasets
-- Strong ecosystem for the additional libraries I needed
-
-### State Management
-**Redux Toolkit + Redux Persist** for global state. Key decisions:
-- User authentication state needs to persist across page refreshes
-- Role based routing requires consistent access to user role
-- Redux Persist saves to sessionStorage so tokens/user info survive F5
-
-**Why Redux over Context API?** Initially tried Context, but with 15+ pages needing access to user state, prop drilling became a nightmare. Redux centralized it cleanly.
-
-### Routing
-**React Router v6** with protected route wrappers:
-- Separate route trees for `/admin/*`, `/manager/*`, and `/employee/*`
-- Programmatic navigation after login based on user role
-- Nested layouts that wrap role-specific pages with their sidebar/nav
-
-### UI Component Libraries
-**Material-UI (MUI)** for icons and some components:
-- Needed a consistent icon system (EditOutlined, DeleteOutline, Add, etc.)
-- Used `@mui/material` components for a few complex inputs
-
-**DaisyUI + Tailwind CSS** for styling:
-- DaisyUI gave me modal components and loading spinners out of the box
-- Tailwind for styling - way faster than writing custom CSS for every element
-- This combo let me build responsive layouts quickly while maintaining consistency
-
-### Forms & Date Handling
-**React Datepicker** for date range selection:
-- Managers need to filter transactions by date
-- Custom styling to match the orange/cream brand palette
-
-**React Hot Toast** for notifications:
-- Clean, dismissible toast notifications for CRUD operations
-- Better UX than native alerts
-
-### HTTP Client
-**Axios** for all API calls:
-- Centralized configuration in `services/api.jsx`
-- Interceptors for adding auth tokens to every request
-- Better error handling than fetch
-
-### Containerization
-**Docker** with a multi-stage build:
-- Stage 1: Install dependencies and build the React app
-- Stage 2: Serve the build folder with `serve`
-- Deployed on Railway with Nixpacks configuration for automatic builds
-
-## Project Structure
+### Frontend Architecture
 
 ```
 src/
-├── app.jsx                    # Root routing and role-based navigation
-├── layout/                    # Layout wrappers with sidebars for each role
-│   ├── Admin.jsx
-│   ├── Manager.jsx
-│   └── Employee.jsx
-├── pages/                     # All page components, organized by role
-│   ├── Admin/                 # Companies, restaurants, users, notifications
-│   ├── Manager/               # Dashboard, transactions, user management
-│   ├── Employee/              # Dashboard, settings, authentication
-│   └── Home/                  # Public landing page
-├── components/                # Reusable UI components
-│   ├── modals/                # All modal dialogs (create, edit, delete, view)
-│   ├── Admin/                 # Admin-specific components (PopularProducts)
-│   ├── Manager/               # Manager-specific components (charts, tables)
-│   └── Employee/              # Employee-specific components
+├── app.jsx                 # Root routing and role-based navigation
+│
+├── layout/                 # Layout wrappers with sidebars
+│   ├── Admin.jsx           # Admin layout with sidebar and nav
+│   ├── Manager.jsx         # Manager layout with sidebar and nav
+│   └── Employee.jsx        # Employee layout with sidebar and nav
+│
+├── pages/                  # Route-level components
+│   ├── Home/               # Public landing page
+│   │   ├── Homepage.jsx
+│   │   └── Homepage.css
+│   │
+│   ├── Admin/              # Admin-only pages
+│   │   ├── Sign.jsx        # Admin login
+│   │   ├── companies.jsx   # Company list and management
+│   │   ├── company_details.jsx
+│   │   ├── restaurants.jsx # Restaurant list
+│   │   ├── restaurant_details.jsx
+│   │   ├── user.jsx        # User management (managers + employees)
+│   │   └── notifications.jsx
+│   │
+│   ├── Manager/            # Manager-only pages
+│   │   ├── Signin.jsx
+│   │   ├── dashboard.jsx   # Analytics, charts, transactions
+│   │   ├── user.jsx        # Employee management for their company
+│   │   └── notifications.jsx
+│   │
+│   └── Employee/           # Employee-only pages
+│       ├── Signin.jsx
+│       ├── Signup.jsx
+│       ├── dashboard.jsx
+│       ├── settings.jsx
+│       └── notifications.jsx
+│
+├── components/             # Reusable UI components
+│   ├── modals/
+│   │   ├── admin/          # Admin CRUD modals
+│   │   │   ├── Create_Company.jsx
+│   │   │   ├── Edit_Company.jsx
+│   │   │   ├── Delete_Company.jsx
+│   │   │   ├── View_Company.jsx
+│   │   │   ├── Create_Restaurant.jsx
+│   │   │   ├── Create_Menu.jsx
+│   │   │   ├── Create_Manager.jsx
+│   │   │   └── ...
+│   │   │
+│   │   └── manager/        # Manager CRUD modals
+│   │       ├── Create_Transaction.jsx
+│   │       ├── Edit_User.jsx
+│   │       └── ...
+│   │
+│   ├── Admin/
+│   │   └── PopularProducts.jsx
+│   ├── Manager/
+│   │   ├── Sidebar.jsx
+│   │   ├── Popular_Products.jsx
+│   │   └── Recent_Transaction.jsx
+│   ├── Employee/
+│   │   └── Sidebar.jsx
+│   │
+│   ├── sidebar.jsx         # Shared sidebar component
+│   ├── Profile_Btn.jsx     # Profile dropdown
+│   ├── Profit_Chart.jsx    # Chart.js wrapper
+│   ├── Company_Picker.jsx  # Company dropdown
+│   ├── Date_Picker.jsx     # Date range selector
+│   ├── input.jsx           # Custom input component
+│   └── Modal_Header.jsx    # Reusable modal header
+│
 ├── services/
-│   ├── api.jsx                # All API calls centralized here
-│   ├── function.jsx           # Utility functions
-│   └── profit_calculator.jsx  # Business logic for profit calculations
-└── redux/                     # Redux store and user state slice
+│   ├── api.jsx             # Centralized API calls (all endpoints here)
+│   ├── function.jsx        # Utility functions
+│   └── profit_calculator.jsx # Business logic for analytics
+│
+├── redux/                  # State management
+│   ├── store.js            # Redux store configuration
+│   └── states/
+│       └── user.js         # User slice (auth state)
+│
+└── assets/                 # Static assets
+    ├── backgroundImage.jpg
+    ├── bizmunch-icon-grey.png
+    ├── bizmunch-icon-white.png
+    └── ...
 ```
 
-### Design Patterns I Used
+### Data Flow
 
-**Centralized API Layer**: Every API call goes through `services/api.jsx`. Benefits:
-- Single source of truth for the backend URL
-- Token management in one place
-- Easy to add interceptors or modify request structure
+1. **Authentication Flow**
+   ```
+   Login Form → Axios POST /users/auth/login → Backend Validates → 
+   JWT Token Generated → Redux Store (user object) → Redux Persist (sessionStorage) → 
+   Protected Route Checks Role → Redirect to Role-Specific Dashboard
+   ```
 
-**Component Composition for Modals**: Every CRUD operation (Create, Edit, Delete, View) is its own modal component:
-- Keeps page components clean
-- Modals are triggered by `document.getElementById('modal_id').showModal()` (DaisyUI pattern)
-- Each modal manages its own local state and loading states
+2. **CRUD Operation Flow (Example: Create Restaurant)**
+   ```
+   Admin Clicks "Add Restaurant" → Modal Opens → 
+   Admin Fills Form (name, logo, manager) → Submit → 
+   Axios POST /users/dashboard/restaurants with FormData → 
+   Backend Saves to MongoDB (restaurants collection) → 
+   Success Response → Redux Update (optional) → 
+   Toast Notification → Modal Closes → Parent Component Refetches Data → 
+   UI Updates → Mobile App Queries Same MongoDB → Users See New Restaurant
+   ```
 
-**Protected Routes**: Layout components wrap pages and handle auth checks:
-- If no token in sessionStorage, redirect to signin
-- Role mismatch (e.g., manager trying to access `/admin`) redirects appropriately
+3. **Image Upload Flow**
+   ```
+   Admin Selects Image → FileReader Previews → 
+   FormData Appends File → Axios POST with multipart/form-data → 
+   Backend Multer Middleware → Saves to Disk/S3 → 
+   Returns Image URL → MongoDB Stores URL → 
+   Frontend Displays Image via <img src={url} />
+   ```
 
-**Optimistic UI Updates**: After create/edit/delete operations:
-- Show success toast immediately
-- Call `refresh()` function passed as prop to refetch data
-- Gives snappy UX even with network latency
+4. **Role-Based Access Control**
+   ```
+   User Logs In → Backend Returns JWT with Role Claim (admin/manager/employee) → 
+   Redux Stores User Object → 
+   React Router Checks Role Before Rendering Route → 
+   Layout Component Checks Role → 
+   Sidebar Shows Role-Specific Menu Items → 
+   API Requests Include Bearer Token → 
+   Backend Middleware Validates Token → 
+   Checks Role for Endpoint Access → 
+   Returns Data or 403 Forbidden
+   ```
 
-## Key Features
+### Key Design Patterns
 
-### For Admins
-- **Company Management**: Create restaurant groups (e.g., "Downtown Burgers Inc"), upload logos, track number of restaurants per company
-- **Restaurant Management**: Add individual locations, set categories (Asian, Fastfood, Café, Grill, etc.), upload logos, assign managers
-- **Menu Management**: Upload menu item photos, set names, prices, and discount percentages - these appear in the mobile app instantly
-- **User Management**: Create manager accounts, view all users (managers + employees), edit user details, delete accounts
-- **Notifications**: Send platform-wide or company-specific announcements
+- **Centralized API Layer:** All API calls in `services/api.jsx` with Axios interceptors
+- **Protected Routes:** Layout components enforce auth checks and role-based redirects
+- **Modal Composition:** CRUD operations isolated in modal components with local state
+- **Optimistic UI Updates:** Show toast immediately, refetch data in background
+- **Prop Drilling Mitigation:** Redux for auth state, props for parent-child data flow
+- **Component Reusability:** Shared components (sidebar, input, modal header) used across roles
 
-### For Managers
-- **Analytics Dashboard**: Profit charts, popular products, recent transactions
-- **Employee Management**: Create employee accounts for their company, edit/delete employees
-- **Transaction Recording**: Log when discounts are redeemed (barcode scanning integration)
-- **Filtering & Search**: Date range pickers for transaction history
+---
 
-### For Employees
-- **Personal Dashboard**: View assigned restaurants and available discounts
-- **Settings Management**: Update profile info, change password
-- **Notifications**: Receive messages from admins and managers
+## Features
 
-### Cross Features
-- **Role Based Access Control**: JWT tokens with role claims, enforced on both frontend routing and backend API
-- **Real-Time Data Sync**: All changes write to MongoDB and are immediately queryable by the mobile app
-- **Image Upload**: Admins upload restaurant logos and menu item photos, stored on the backend and served via URL
-- **Responsive Design**: Works on desktop and tablet (mobile-first design with Tailwind breakpoints)
+### Admin Portal (Fully Functional)
+- **Company Management:** Create, edit, delete, view restaurant groups with logos
+- **Restaurant Management:** Add locations, set categories, upload logos, assign managers
+- **Menu Management:** Upload menu item photos, set prices and discount percentages
+- **User Management:** Create manager accounts, view all users, edit/delete accounts
+- **Notifications:** Send platform-wide announcements *(in progress)*
 
-## What I Learned
+### Manager Portal (Partially Complete)
+- **Analytics Dashboard:** Profit charts, popular products, transaction history
+- **Employee Management:** Create employee accounts, edit/delete for their company
+- **Transaction Recording:** Log discount redemptions with barcode scanning
+- **Date Filtering:** Filter transactions by custom date ranges
 
-### Technical Skills Gained
+### Employee Portal (Not Yet Started)
+- **Personal Dashboard:** View assigned restaurants and discounts
+- **Settings:** Update profile, change password
+- **Notifications:** Receive messages from admins
 
-**State Management at Scale**: Managing user auth state, company lists, restaurant data, menu items, and transaction history across 30+ components taught me when to use Redux (global auth) vs. local state (modal forms) vs. props (parent-child data flow).
+### Cross-Cutting Features
+- **Role-Based Access Control:** JWT tokens with role claims
+- **Real-Time Sync:** MongoDB changes reflect instantly in mobile app
+- **Image Upload:** Restaurant logos and menu photos
+- **Responsive Design:** Desktop and tablet support with Tailwind breakpoints
 
-**API Design Patterns**: Working with a RESTful backend taught me the importance of:
-- Consistent request/response structures
-- Proper HTTP methods (PUT for login felt weird but matched the backend)
-- Token-based auth with Bearer tokens in headers
-- Error handling and user feedback
+---
 
-**Role-Based Routing**: Building three completely separate user experiences in one codebase:
-- Learned to abstract layout components
-- Used React Router's nested routes effectively
-- Implemented redirect logic based on user role after login
-
-**Docker & Deployment**: First time using multi-stage Docker builds and deploying on Railway:
-- Learned about Nixpacks (Railway's build system)
-- Debugged missing dependencies in production vs. development
-- Understood environment variables and build-time vs. runtime configs
-
-**Component Architecture**: Struggled with prop drilling early on, then learned:
-- When to lift state up vs. keep it local
-- How to compose modals and pass refresh callbacks
-- The power of render props and children patterns
-
-### Challenges Overcome
-
-**Babel Dependency Hell**: React Scripts 5.0.1 has a peer dependency issue with `@babel/plugin-proposal-private-property-in-object`. Took hours of Googling to find the fix (explicitly adding it to dependencies).
-
-**Token Management**: Initially stored tokens in localStorage, but that persists across tabs in weird ways. Switched to sessionStorage for better security and session isolation.
-
-**Image Uploads**: Handling multipart/form-data vs. JSON was tricky. Learned to use FormData and let the browser set Content-Type headers automatically.
-
-**Date Filtering**: Timezone mismatches between frontend, backend, and MongoDB caused transactions to appear on the wrong day. Fixed with date-fns and explicit UTC conversions.
-
-### If I Built This Again
-
-**TypeScript**: Would absolutely use TypeScript from the start. The number of times I passed the wrong shape of data to a component or API call was embarrassing.
-
-**React Query**: Instead of Redux for API state, I'd use React Query. Redux is overkill when you're just caching server data.
-
-**Component Library Consistency**: Pick one library (MUI or DaisyUI + Tailwind), not both. Mixing them caused styling conflicts.
-
-**Testing**: Would add Jest + React Testing Library for at least critical paths (login, CRUD operations).
-
-**Better Error Boundaries**: Right now, if an API call fails badly, the whole app can crash. Would add proper error boundaries and fallback UIs.
-
-**Accessibility**: Didn't think about keyboard navigation, screen readers, or ARIA labels until too late. Would bake accessibility in from the start next time.
-
-## Getting Started
+## Installation & Development
 
 ### Prerequisites
-- Node.js 18+ and npm
-- Backend API running (not included in this repo)
+- Node.js 18+
+- npm or yarn
+- Backend API running (see backend repo)
 - MongoDB instance
 
-### Environment Variables
-
-Create a `.env` file in the root:
-
-### Installation
+### Local Development
 
 ```bash
+# Clone the repository
+git clone https://github.com/your-username/bizmunch-dashboard-site.git
+cd bizmunch-dashboard-site
+
 # Install dependencies
 npm install
 
+# Set up environment variables
+# Create a .env file with:
+REACT_APP_SERVER_URL=http://localhost:5000
+
 # Start development server
 npm start
+
+# Open http://localhost:3000
 ```
 
-The app will open at `http://localhost:3000`.
-
-### Building for Production
+### Production Build
 
 ```bash
-# Create optimized production build
+# Build the app
 npm run build
 
-# Serve the build locally (optional)
+# Serve locally (optional)
 npx serve -s build
 ```
+
+---
+
+## Deployment
+
+### Railway Deployment
+
+This project is configured for Railway with `nixpacks.toml`:
+
+```toml
+[phases.setup]
+nixPkgs = ['nodejs-18_x']
+
+[phases.install]
+cmds = ['npm ci']
+
+[phases.build]
+cmds = ['npm run build']
+
+[start]
+cmd = 'npx serve -s build -l $PORT'
+
+[variables]
+GENERATE_SOURCEMAP = 'false'
+NODE_OPTIONS = '--max_old_space_size=4096'
+```
+
+**Deploy Steps:**
+1. Push code to GitHub
+2. Connect repository to Railway
+3. Set environment variables:
+   ```
+   REACT_APP_SERVER_URL=https://your-backend.railway.app
+   ```
+4. Railway auto-builds and deploys
+5. Access your dashboard at the generated Railway URL
 
 ### Docker Deployment
 
@@ -269,32 +403,203 @@ docker build -t bizmunch-dashboard .
 docker run -p 3000:3000 bizmunch-dashboard
 ```
 
-## API Endpoints Used
+**Dockerfile Structure:**
+- Stage 1: Node.js 18 Alpine → Install dependencies → Build React app
+- Stage 2: Serve static files with `serve` on port 3000
 
-All endpoints are in `src/services/api.jsx`. Key routes:
+---
 
-**Authentication:**
-- `PUT /users/auth/login` - Login (returns JWT)
-- `POST /users/auth/register` - Register new user
-- `PUT /users/auth/password/change` - Change password
+## API Integration
 
-**Admin Endpoints:**
-- `GET /users/dashboard/companies` - List all companies
-- `POST /users/dashboard/companies` - Create company
-- `GET /users/dashboard/restaurants` - List all restaurants
-- `POST /users/dashboard/restaurants` - Create restaurant
-- `POST /users/dashboard/menu/{restaurantId}` - Add menu item
-- `GET /users/dashboard/users` - List all users
-- `POST /users/dashboard/managers` - Create manager account
+All API calls are centralized in `src/services/api.jsx`. The frontend communicates with the backend via REST API.
 
-**Manager Endpoints:**
-- `GET /users/dashboard/employees` - List employees for manager's company
-- `POST /users/dashboard/transactions` - Create transaction record
-- `GET /users/dashboard/transactions` - List transactions
-- `GET /users/dashboard/popularproducts` - Get popular product stats
+### Authentication Endpoints
+```javascript
+PUT  /users/auth/login              // Login (returns JWT)
+POST /users/auth/register           // Register new user
+PUT  /users/auth/password/change    // Change password
+PUT  /users/auth/profile/update     // Update profile
+```
+
+### Admin Endpoints
+```javascript
+GET  /users/dashboard/companies                    // List all companies
+POST /users/dashboard/companies                    // Create company
+PUT  /users/dashboard/companies/:id                // Update company
+DELETE /users/dashboard/companies/:id              // Delete company
+
+GET  /users/dashboard/restaurants                  // List all restaurants
+POST /users/dashboard/restaurants                  // Create restaurant
+PUT  /users/dashboard/restaurants/:id              // Update restaurant
+DELETE /users/dashboard/restaurants/:id            // Delete restaurant
+GET  /users/dashboard/restaurant/:id/details       // Get restaurant details
+
+POST /users/dashboard/menu/:restaurantId           // Add menu item
+PUT  /users/dashboard/restaurant/menu/:restaurantId/:menuId  // Update menu
+DELETE /users/dashboard/restaurant/menu/:restaurantId/:menuId // Delete menu
+
+GET  /users/dashboard/users                        // List all users
+POST /users/dashboard/managers                     // Create manager
+PUT  /users/dashboard/user/:id                     // Update user
+DELETE /users/dashboard/user/:id                   // Delete user
+
+GET  /users/dashboard/notifications                // Get all notifications
+POST /users/dashboard/notifications                // Create notification
+```
+
+### Manager Endpoints
+```javascript
+GET  /users/dashboard/employees            // List employees for manager's company
+POST /users/dashboard/employees            // Create employee
+PUT  /users/dashboard/employees/:id        // Update employee
+DELETE /users/dashboard/employees/:id      // Delete employee
+
+GET  /users/dashboard/transactions         // List transactions
+POST /users/dashboard/transactions         // Create transaction
+
+GET  /users/dashboard/popularproducts      // Get popular product stats
+GET  /users/dashboard/companyNotifications // Get company-specific notifications
+```
+
+### Request/Response Format
+
+**Authentication Header:**
+```javascript
+Authorization: Bearer <JWT_TOKEN>
+```
+
+**Example Request (Create Restaurant):**
+```javascript
+POST /users/dashboard/restaurants
+Content-Type: multipart/form-data
+
+FormData:
+  name: "Downtown Burgers"
+  location: "123 Main St, City"
+  category: "Fastfood"
+  managerName: "John Doe"
+  managerEmail: "john@example.com"
+  logo: <File>
+```
+
+**Example Response:**
+```json
+{
+  "status": 201,
+  "message": "Restaurant created successfully",
+  "data": {
+    "_id": "60d5ec49f1b2c8b1f8e4e1a1",
+    "name": "Downtown Burgers",
+    "location": "123 Main St, City",
+    "category": "Fastfood",
+    "logo": "https://backend.com/uploads/logo-123.png"
+  }
+}
+```
+
+---
+
+## What I Learned
+
+### Technical Skills Gained
+
+**State Management at Scale**
+- Managed auth state, company lists, restaurant data, menu items, and transactions across 30+ components
+- Learned when to use Redux (global auth) vs. local state (modal forms) vs. props (parent-child)
+- Implemented Redux Persist to survive page refreshes without re-login
+
+**Role-Based Access Control**
+- Built three completely separate user experiences in one codebase
+- Learned to abstract layout components and use React Router's nested routes
+- Implemented JWT token validation and role-based redirects
+
+**API Design & Integration**
+- Centralized all API calls in `services/api.jsx` for maintainability
+- Used Axios interceptors to automatically inject Bearer tokens
+- Handled multipart/form-data for image uploads vs. JSON for other requests
+- Implemented proper error handling with user-friendly toast notifications
+
+**Docker & Cloud Deployment**
+- First experience with multi-stage Docker builds for production optimization
+- Learned Railway's Nixpacks build system and environment variable management
+- Debugged production-only bugs (missing dependencies, environment config issues)
+
+**Component Architecture**
+- Initially struggled with prop drilling, then learned when to lift state up
+- Built reusable modal components for all CRUD operations
+- Implemented optimistic UI updates for better UX
+
+### Challenges Overcome
+
+**Babel Dependency Hell**
+- React Scripts 5.0.1 has a peer dependency issue with `@babel/plugin-proposal-private-property-in-object`
+- Production builds failed on Railway until explicitly adding it to `dependencies`
+- Solution: Added babel plugin to package.json and updated package-lock.json
+
+**Token Management**
+- Initially used localStorage, but had issues with tokens persisting across tabs
+- Switched to sessionStorage with Redux Persist for better session isolation
+- Learned the difference between stateless JWT auth and session-based auth
+
+**Image Upload Complexity**
+- Handling multipart/form-data required FormData API and different Content-Type headers
+- Let browser set Content-Type automatically (don't manually set it with FormData)
+- Backend needed Multer middleware to parse file uploads
+
+**Timezone Bugs**
+- Frontend, backend, and MongoDB had different timezone handling
+- Transactions appeared on wrong dates in analytics
+- Fixed with date-fns and explicit UTC conversions
+
+**Modal State Management**
+- Modals shared state in weird ways when using DaisyUI's dialog system
+- Solution: Each modal manages its own local state and resets on close
+- Pass `refresh()` callback from parent to refetch data after CRUD operations
+
+### If I Built This Again
+
+**TypeScript from Day 1**
+- Would use TypeScript to catch shape mismatches between API responses and component props
+- Too many runtime errors from passing wrong data shapes
+
+**React Query Instead of Redux for API State**
+- Redux is overkill when just caching server data
+- React Query has built-in caching, refetching, and loading states
+- Would keep Redux only for global UI state (theme, sidebar open/closed)
+
+**Single UI Library**
+- Mixing MUI and DaisyUI caused styling conflicts and bundle size bloat
+- Next time: pick one library (probably shadcn/ui + Tailwind)
+
+**Testing from the Start**
+- No tests written due to time constraints
+- Would add Jest + React Testing Library for critical paths (auth, CRUD flows)
+- At minimum: unit tests for utility functions, integration tests for API calls
+
+**Better Error Boundaries**
+- Currently, a bad API response can crash the whole app
+- Would add error boundaries with fallback UIs for graceful degradation
+
+**Accessibility**
+- Didn't consider keyboard navigation, focus management, or screen readers
+- Would use ARIA labels, semantic HTML, and test with keyboard-only navigation
+
+---
+
+## Color Palette
+
+The brand uses a warm, inviting color scheme:
+- **Primary Orange:** `#F58549`
+- **Light Orange/Cream:** `#FCDFCF`, `#FDECE2`
+- **Text Gray:** `#667085`, `#101828`
+- **Border Gray:** `#D9D9D9`
+
+---
 
 ## License
 
-This project is part of my portfolio. Feel free to look around, but please don't copy it wholesale for your own portfolio.
+MIT License - See LICENSE file for details
 
-**Note**: This is the dashboard frontend only. The backend API and mobile app are separate repositories not included here.
+---
+
+**Note:** This is the dashboard frontend only. The backend API and React Native mobile app are in separate repositories.
