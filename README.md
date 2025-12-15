@@ -2,6 +2,8 @@
 
 A comprehensive management dashboard for the Biz MuncH restaurant discount platform. This admin/manager interface enables real-time control of companies, restaurants, menus, discounts, and user accounts - all syncing instantly to the consumer-facing mobile app via MongoDB.
 
+**BizMuncH URL:** [bizmunch-url](https://bizmunch.com/home)
+
 **Backend Repository:** [bizmunch-backend](https://github.com/JamieJiHeonKim/bizmunch_dashboard_services)
 
 ### Application Workflow
